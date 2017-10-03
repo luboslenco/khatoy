@@ -1,24 +1,29 @@
 // https://github.com/luboslenco/khatoy
-package;
 
-import kha.Framebuffer;
-import kha.Scheduler;
-import kha.System;
-import kha.Image;
+import kha.*;
 import kha.graphics4.*;
+import kha.math.*;
 
 class Main {
-
 	static var pipe: PipelineState;
 	static var vb: VertexBuffer;
 	static var ib: IndexBuffer;
     static var iTime: ConstantLocation;
+    static var iResolution: ConstantLocation;
+    static var iMouse: ConstantLocation;
+    static var vMouse = new FastVector4();
+    static var vResolution = new FastVector2();
 
 	static function render(framebuffer: Framebuffer): Void {
+        vResolution.x = System.windowWidth();
+        vResolution.y = System.windowHeight();
+
 		var g = framebuffer.g4;
 		g.begin();
 		g.setPipeline(pipe);
 		g.setFloat(iTime, Scheduler.time());
+        g.setVector4(iMouse, vMouse);
+        g.setVector2(iResolution, vResolution);
 		g.setVertexBuffer(vb);
 		g.setIndexBuffer(ib);
 		g.drawIndexedVertices();
@@ -46,12 +51,34 @@ class Main {
 
 			pipe = new PipelineState();
 			pipe.inputLayout = [structure];
-			pipe.fragmentShader = kha.Shaders.quad_frag;
-			pipe.vertexShader = kha.Shaders.quad_vert;
+			pipe.fragmentShader = Shaders.quad_frag;
+			pipe.vertexShader = Shaders.quad_vert;
 			pipe.compile();
             iTime = pipe.getConstantLocation("iTime");
+            iMouse = pipe.getConstantLocation('iMouse');
+            iResolution = pipe.getConstantLocation('iResolution');
 
 			System.notifyOnRender(function (framebuffer) { render(framebuffer); });
+
+            var mouse = kha.input.Mouse.get();
+
+            if (mouse != null) {
+                mouse.notify(
+                    function( b, x, y ) {
+                        vMouse.z = b == 0 ? 1.0 : 0.0;
+                    }, function( b, x, y ) {
+                        if (vMouse.z > 0.5) {
+                            vMouse.z = 0.0;
+                        }
+                    }, function(x, y, dx, dy) {
+                        if (vMouse.z > 0.5) {
+                            vMouse.x = x;
+                            vMouse.y = System.windowHeight() - y;
+                        }
+                    },
+                    null
+                );
+            }
 		});
 	}
 }
