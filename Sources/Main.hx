@@ -65,9 +65,11 @@ class Main {
             if (mouse != null) {
                 mouse.notify(
                     function( b, x, y ) {
-                        vMouse.z = b == 0 ? 1.0 : 0.0;
+						if (b == 0) {
+                        	vMouse.z = 1.0;
+						}
                     }, function( b, x, y ) {
-                        if (vMouse.z > 0.5) {
+                        if (b == 0) {
                             vMouse.z = 0.0;
                         }
                     }, function(x, y, dx, dy) {
